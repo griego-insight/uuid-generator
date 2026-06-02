@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>QA UUID Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f6f9; }
+        .container { max-width: 500px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { background: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
+        .result { margin-top: 20px; padding: 15px; background: #e9ecef; border-left: 5px solid #007bff; font-family: monospace; word-break: break-all; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Email to UUID (v3) Generator</h2>
+        <label>Enter Email Address:</label>
+        <input type="email" id="emailInput" placeholder="user@example.com" oninput="generateUUID()">
+        <div class="result">
+            <strong>UUID:</strong> <span id="output">Type an email...</span>
+        </div>
+    </div>
+
+    <script>
+        function isValidEmail(email) {
+            var emailPattern = /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/;
+            return emailPattern.test(email);
+        }
+
+        function generateUUID() {
+            const email = document.getElementById('emailInput').value;
+            if (!email) {
+                document.getElementById('output').innerText = "Type an email...";
+                return;
+            }
+
+            if (!isValidEmail(email)) {
+                document.getElementById('output').innerText = "Enter a valid email address";
+                return;
+            }
+            
+            try {
+                const hex = SparkMD5.hash(email);
+                const bytes = hex.match(/.{2}/g).map(function(part) {
+                    return parseInt(part, 16);
+                });
+
+                bytes[6] = (bytes[6] & 0x0f) | 0x30;
+                bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+                const result = bytes.map(function(byte) {
+                    return byte.toString(16).padStart(2, '0');
+                }).join('');
+
+                const formatted = [
+                    result.substring(0, 8),
+                    result.substring(8, 12),
+                    result.substring(12, 16),
+                    result.substring(16, 20),
+                    result.substring(20, 32)
+                ].join('-');
+
+                document.getElementById('output').innerText = formatted;
+            } catch (e) {
+                document.getElementById('output').innerText = "Error generating UUID";
+            }
+        }
+    </script>
+</body>
+</html>
